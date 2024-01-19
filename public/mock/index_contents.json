@@ -1,0 +1,4 @@
+[
+  {"id": "1", "image": "photo-o", "text": "成员管理", "type": 1, "router": "/member", "notice": ""},
+  {"id": "2", "image": "photo-o", "text": "团队管理", "type": 1, "router": "/team", "notice": ""}
+]
