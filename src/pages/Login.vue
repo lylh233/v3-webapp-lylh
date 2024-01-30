@@ -1,6 +1,6 @@
 <template>
   <div class="login" style="padding: 1rem">
-    <van-form @submit="onSubmit">
+    <van-form>
       <van-cell-group inset>
         <van-field
             v-model="username"
@@ -29,10 +29,10 @@
 
 <script>
 import http from "@/utils/http.js";
-import authApi from "@/utils/auth.js";
+import authApi from "@/api/auth.js";
 import { setNav } from '@/utils/serverUtils.js'
 import { showFailToast } from 'vant';
-import { setCookie } from '@/utils/cookie.js'
+import Cookies from "js-cookie";
 
 
 export default {
@@ -66,8 +66,10 @@ export default {
 
         onSuccess: function (res) {
           console.log(res);
-          setCookie(process.env.VUE_APP_TOKEN, res.data, 1);
-          _this.toHome(res.data);
+          Cookies.set(process.env.VUE_APP_TOKEN, res.data.data, {
+            expires: 30,
+          });
+          _this.toHome();
         },
 
         onError: function (res) {
@@ -76,10 +78,9 @@ export default {
       });
     },
 
-    toHome(data) {
+    toHome() {
       this.$router.replace({
-        path: "/",
-        params: data,
+        path: "/"
       })}
   }
 

@@ -12,7 +12,11 @@
 
 ## Project setup
 ```
+npm install core-js-compat
+npm install core-js
+npm install js-cookie
 npm install
+
 ```
 
 ### Compiles and hot-reloads for development
