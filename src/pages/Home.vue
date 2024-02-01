@@ -67,7 +67,6 @@ export default {
         url: "/mock/index_images.json",
         method: "get",
         onSuccess: function (res) {
-          console.log("res")
           _this.images = res.data;
         }
       });
@@ -79,7 +78,6 @@ export default {
         url: "/mock/index_contents.json",
         method: "get",
         onSuccess: function (res) {
-          console.log("res")
           _this.contents = res.data;
         }
       });

@@ -22,14 +22,45 @@
       />
     </div>
 
-    <router-view/>
+    <!--vue3的router-view绑定ref不能直接写，不然获取的是router-view实例-->
+    <router-view v-slot="{ Component }">
+      <component ref="routerViewRef" :is="Component" />
+    </router-view>
+
   </div>
 </template>
 
 <script>
 
+import router from '@/router';
+import {ref} from 'vue';
+
+
 export default {
   name: 'App',
+
+  setup() {
+
+    const routerViewRef = ref(null);
+
+    const onClickLeft = ()=>{
+      router.go(-1);
+    }
+
+    const onClickRight = ()=>{
+      let currentRoute = router.currentRoute.value.fullPath;
+      console.log(currentRoute);
+      if (currentRoute.indexOf("/member") === 0) {
+        routerViewRef.value.addDialogOpen();
+      }
+    }
+
+    return {
+      routerViewRef,
+      onClickLeft,
+      onClickRight,
+    }
+  },
 
   props: {
 
@@ -46,13 +77,13 @@ export default {
   },
 
   methods: {
-    onClickLeft() {
-      this.$router.go(-1);
-    },
-
-    onClickRight() {
-
-    },
+    // onClickLeft() {
+    //   this.$router.go(-1);
+    // },
+    //
+    // onClickRight() {
+    //   this.$refs
+    // },
   },
 }
 </script>

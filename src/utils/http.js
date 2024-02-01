@@ -44,7 +44,7 @@ const httpServer = (opts) => {
 
     let _data = Object.assign({}, opts.data);
 
-    if (opts.method === 'get') {
+    if (opts.method === 'get' || opts.method === 'delete') {
         httpRequestOpts.params = _data;
     } else {
         //这里后台接收的是json, x-www-form-urlencoded用qs.stringify
