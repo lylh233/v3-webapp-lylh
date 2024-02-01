@@ -7,13 +7,13 @@
             v-model="searchModel"
             show-action
             placeholder="请输入搜索关键词"
-            @search="onSearch"
+            @search="onRefresh"
             @cancel="onCancel"
         />
       </form>
     </div>
     <!--新增成员-->
-    <div class="edit-dialog">
+    <div class="add-dialog">
       <van-dialog :show="addDialogShow" title="编辑成员" show-cancel-button
                   @confirm = "addDialogConfirm"
                   @cancel="addDialogShow = false">
@@ -95,7 +95,7 @@
           <van-cell v-for="(item, index) in memberList" :key="index">
             <template #title>
               <span class="custom-title">{{item.name}}</span>
-              <van-tag type="success" style="margin-left: .2rem">{{item.occupation_name}}</van-tag>
+              <van-tag :color="item.occupation_color" style="margin-left: .2rem">{{item.occupation_name}}</van-tag>
               <van-tag type="primary" style="margin-left: .2rem">{{item.position}}</van-tag>
             </template>
 
@@ -137,20 +137,71 @@ export default {
     const editDialogShow = ref(false);
     const addMemberShowPicker = ref(false);
     const addDialogShow = ref(false);
+    const pageNum = ref(1);
+    const refreshing = ref(false);
+    const loading = ref(false);
+    const finished = ref(false);
 
-    const onSearch = () => {
+    //list model begin
+    const onLoad = () => {
+      loading.value = true;
+      refreshing.value = false;
+      let filter = {
+        name: "",
+        position: "",
+        occupation_uuid: "",
+        key_name: searchModel.value
+      }
+
+      http({
+        url: memberApi.queryMember.url,
+        method: memberApi.queryMember.method,
+        data: {
+          filter: JSON.stringify(filter),
+          page_num: pageNum.value,
+          page_size: 10
+        },
+
+        onSuccess: function (res) {
+          if (res.data.data.length > 0) {
+            res.data.data.forEach(item => {
+              memberList.value.push(item)
+            })
+            loading.value = false;
+
+            if (res.data.page_info.total_page > res.data.page_info.page_num) {
+              ++pageNum.value;
+            } else {
+              finished.value = true;
+            }
+          }
+        },
+
+        onError: function (res) {
+          showFailToast(res.data.msg);
+        }
+      });
+
+    }
+    const onRefresh = () => {
+      pageNum.value = 1;
       memberList.value = [];
-      queryMember(1);
+      finished.value = false;
+      loading.value = true;
+      onLoad();
     }
     const onCancel = () => {
       searchModel.value = "";
-      memberList.value = [];
-      queryMember(1);
+      onRefresh();
     }
+    //list model end
 
+
+    //edit model begin
     const editDialogOpen = (data) => {
       editMemberModel.value = data;
       editDialogShow.value = true;
+      onLoadOccupationList();
     };
     const editDialogConfirm = () => {
       http({
@@ -159,10 +210,9 @@ export default {
         data: editMemberModel.value,
 
         onSuccess: function () {
-          memberList.value = [];
+          onRefresh();
           editDialogShow.value = false;
           showSuccessToast("编辑成功！");
-          queryMember(1);
         },
 
         onError: function (res) {
@@ -175,10 +225,13 @@ export default {
       editMemberModel.value.occupation_name = selectedOptions[0].name;
       editMemberShowPicker.value = false;
     };
+    //edit model end
 
+    //add model begin
     const addDialogOpen = () => {
       addMemberModel.value = {};
       addDialogShow.value = true;
+      onLoadOccupationList();
     }
     const addDialogConfirm = () => {
       http({
@@ -187,10 +240,9 @@ export default {
         data: addMemberModel.value,
 
         onSuccess: function () {
-          memberList.value = [];
+          onRefresh();
           addDialogShow.value = false;
           showSuccessToast("新增成功！");
-          queryMember(1);
         },
 
         onError: function (res) {
@@ -203,7 +255,9 @@ export default {
       addMemberModel.value.occupation_name = selectedOptions[0].name;
       addMemberShowPicker.value = false;
     };
+    //add model end
 
+    //delete model begin
     const deleteMember = (data) => {
       http({
         url: memberApi.deleteMember.url,
@@ -213,9 +267,8 @@ export default {
         },
 
         onSuccess: function () {
-          memberList.value = [];
+          onRefresh();
           showSuccessToast("删除成功！");
-          queryMember(1);
         },
 
         onError: function (res) {
@@ -223,42 +276,10 @@ export default {
         }
       });
     }
+    //delete model end
 
-    const queryMember = (page) => {
-      let filter = {
-        name: "",
-        position: "",
-        occupation_uuid: "",
-        key_name: searchModel.value
-      }
-      let page_size = 10
-
-      http({
-        url: memberApi.queryMember.url,
-        method: memberApi.queryMember.method,
-        data: {
-          filter: JSON.stringify(filter),
-          page_num: page,
-          page_size: page_size
-        },
-
-        onSuccess: function (res) {
-          if (res.data.data.length > 0) {
-            res.data.data.forEach(item => {
-              memberList.value.push(item)
-            })
-            queryMember(++page);
-            console.log(memberList)
-          }
-        },
-
-        onError: function (res) {
-          showFailToast(res.data.msg);
-        }
-      });
-    }
-
-    const getOccupationList = () => {
+    //get occupationList
+    const onLoadOccupationList = () => {
       http({
         url: occupationApi.listOccupation.url,
         method: occupationApi.listOccupation.method,
@@ -277,18 +298,18 @@ export default {
       });
     }
 
-    const refreshing = ref(false);
-    const loading = ref(false);
-    const finished = ref(false);
-    const onLoad = () => {}
-    const onRefresh = () => {}
-
+    //open methods
     defineExpose({addDialogOpen});
 
     return {
       searchModel,
       memberList,
-      onSearch,
+      pageNum,
+      refreshing,
+      loading,
+      finished,
+      onLoad,
+      onRefresh,
       onCancel,
 
       occupationList,
@@ -309,22 +330,12 @@ export default {
       addShowPickerConfirm,
 
       deleteMember,
-
-      queryMember,
-      getOccupationList,
-
-      refreshing,
-      loading,
-      finished,
-      onLoad,
-      onRefresh,
+      onLoadOccupationList,
     };
   },
 
   mounted() {
     setNav("成员管理", "返回", "新增", false, false);
-    this.queryMember(1);
-    this.getOccupationList();
   },
 
 
